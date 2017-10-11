@@ -15,7 +15,8 @@ how to use the page table and disk interfaces.
 #include <string.h>
 #include <errno.h>
 
-const char *sel;
+const char *sel; //Selector of function to execute
+int *ft; //frame table
 
 void page_fault_handler( struct page_table *pt, int page )
 {
@@ -44,6 +45,8 @@ int main( int argc, char *argv[] )
 	int nframes = atoi(argv[2]);
 	sel = argv[3];
 	const char *program = argv[4];
+	
+	ft = malloc(nframes*sizeof(int)); //we create the frame table
 
 	struct disk *disk = disk_open("myvirtualdisk",npages);
 	if(!disk) {
@@ -61,6 +64,12 @@ int main( int argc, char *argv[] )
 	char *virtmem = page_table_get_virtmem(pt);
 
 	char *physmem = page_table_get_physmem(pt);
+	
+	for ( int i = 0; i<nframes; i++){
+		page_table_set_entry(pt, i, i, PROT_READ|PROT_WRITE);//recieves pagetable, page, frame, protection bit
+		ft[i] = i;
+		if (i == npages-1) break;
+	}
 
 	if(!strcmp(program,"sort")) {
 		sort_program(virtmem,npages*PAGE_SIZE);
