@@ -15,22 +15,34 @@ how to use the page table and disk interfaces.
 #include <string.h>
 #include <errno.h>
 
+const char *sel;
+
 void page_fault_handler( struct page_table *pt, int page )
 {
 	printf("page fault on page #%d\n",page);
-	exit(1);
+	if (strcmp("rand", sel)){	
+	}
+	else if (strcmp("fifo", sel)){
+	}
+	else if (strcmp("custom", sel)){
+	}
+	
+	else{
+		printf("No valid algorithm selected");
+		exit(1);
+	}
 }
 
 int main( int argc, char *argv[] )
 {
 	if(argc!=5) {
-		/* Add 'random' replacement algorithm if the size of your group is 3 */
-		printf("use: virtmem <npages> <nframes> <lru|fifo> <sort|scan|focus>\n");
+		printf("use: virtmem <npages> <nframes> <rand|fifo|custom> <sort|scan|focus>\n");
 		return 1;
 	}
 
 	int npages = atoi(argv[1]);
 	int nframes = atoi(argv[2]);
+	sel = argv[3];
 	const char *program = argv[4];
 
 	struct disk *disk = disk_open("myvirtualdisk",npages);
