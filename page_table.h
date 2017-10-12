@@ -60,4 +60,7 @@ void page_table_print_entry( struct page_table *pt, int page );
 
 void page_table_print( struct page_table *pt );
 
+/* Get the page number that is mapped to the given frame. */
+int page_table_get_frame_page( struct page_table *pt, int frame);
+
 #endif

@@ -20,12 +20,22 @@ int *ft; //frame table
 
 void page_fault_handler( struct page_table *pt, int page )
 {
+	const char *data;
+	static int ft_position = 0;
 	printf("page fault on page #%d\n",page);
-	if (strcmp("rand", sel)){	
+	if (strcmp("rand", sel) == 0){
+		
 	}
-	else if (strcmp("fifo", sel)){
+	else if (strcmp("fifo", sel) == 0){
+		printf("fifo\n");
+		int page_to_drop = page_table_get_frame_page(pt, ft[ft_position]);
+		
+		page_table_set_entry(pt, page_to_drop, ft[ft_position], NULL);
+		page_table_set_entry(pt, page, ft[ft_position], PROT_READ|PROT_WRITE);
+		page_table_print(pt);
+		ft_position = (ft_position + 1)%page_table_get_nframes(pt);
 	}
-	else if (strcmp("custom", sel)){
+	else if (strcmp("custom", sel) == 0){
 	}
 	
 	else{
@@ -40,6 +50,8 @@ int main( int argc, char *argv[] )
 		printf("use: virtmem <npages> <nframes> <rand|fifo|custom> <sort|scan|focus>\n");
 		return 1;
 	}
+	
+	char *data;
 
 	int npages = atoi(argv[1]);
 	int nframes = atoi(argv[2]);
@@ -66,10 +78,20 @@ int main( int argc, char *argv[] )
 	char *physmem = page_table_get_physmem(pt);
 	
 	for ( int i = 0; i<nframes; i++){
+		page_table_print(pt);
+		printf("\n");
 		page_table_set_entry(pt, i, i, PROT_READ|PROT_WRITE);//recieves pagetable, page, frame, protection bit
 		ft[i] = i;
+		printf("");
 		if (i == npages-1) break;
 	}
+	
+	for (int i = 0; i < npages; i++){
+		data = malloc(sizeof(char));
+		disk_write(disk, i, data);
+	}
+	
+	//page_table_print(pt);
 
 	if(!strcmp(program,"sort")) {
 		sort_program(virtmem,npages*PAGE_SIZE);

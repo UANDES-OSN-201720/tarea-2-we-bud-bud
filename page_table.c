@@ -164,6 +164,16 @@ void page_table_print( struct page_table *pt )
 	}
 }
 
+int page_table_get_frame_page( struct page_table *pt, int frame)
+{
+	for (int i = 0; i < pt->npages; i++){
+		if (pt->page_mapping[i] == frame){
+			return i;
+		}
+	}
+	return -1;
+}
+
 int page_table_get_nframes( struct page_table *pt )
 {
 	return pt->nframes;
