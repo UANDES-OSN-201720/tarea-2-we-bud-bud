@@ -27,6 +27,7 @@ int *faulted_pages;
 void page_fault_handler( struct page_table *pt, int page )
 {
 	int nframes = page_table_get_nframes(pt);
+	//printf("Frames: %d\n", nframes);
 	int npages = page_table_get_npages(pt);
 	page_faults++;
 	char *data = page_table_get_physmem(pt);
@@ -34,6 +35,7 @@ void page_fault_handler( struct page_table *pt, int page )
 	for (int i = 0; i < nframes; i++){
 		if(ft[i] == -1) {
 			disk_reads++;
+			//printf("%d page, %d frame\n", page, i);
 			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
 			disk_read(disk, page, &data[i*PAGE_SIZE]);
 			ft[i] = page;
@@ -81,18 +83,22 @@ void page_fault_handler( struct page_table *pt, int page )
 	}
 	
 	for (int i = 0; i < nframes; i++){
+		//printf("frame page: %d\n", ft[i]);
 		if(ft[i] == selected_page){
+			//printf("selected page: %d\n", selected_page);
+			
 			disk_writes++;
 			disk_reads++;
 			disk_write(disk, selected_page, &data[i*PAGE_SIZE]);
 			disk_read(disk, page, &data[i*PAGE_SIZE]);
+			ft[i] = page;
 			page_table_set_entry(pt, selected_page, 0, NULL);
 			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
 
 		}
 	}
-	page_table_print(pt);
-	printf("\n");
+	//page_table_print(pt);
+	//printf("\n");
 }
 
 int main( int argc, char *argv[] )
