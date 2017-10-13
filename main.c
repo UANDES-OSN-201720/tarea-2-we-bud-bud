@@ -22,10 +22,11 @@ int page_faults = 0;
 
 void page_fault_handler( struct page_table *pt, int page )
 {
+	int nframes = page_table_get_nframes(pt);
 	printf("%d\n", page);
 	page_faults++;
 	char *data = page_table_get_physmem(pt);
-	for (int i = 0; i < page_table_get_nframes(pt); i++){
+	for (int i = 0; i < nframes; i++){
 		if(ft[i] == -1) {
 			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
 			disk_read(disk, page, &data[i*PAGE_SIZE]);
@@ -33,17 +34,29 @@ void page_fault_handler( struct page_table *pt, int page )
 			return;
 		}
 	}
+	int selected_page = -1;
 	if (strcmp("rand", sel) == 0){
-		
+		while (selected_page == -1){
+			selected_page = ft[lrand48()%nframes];
+		}
 	}
 	else if (strcmp("fifo", sel) == 0){
+		selected_page = page%nframes;
 	}
 	else if (strcmp("custom", sel) == 0){
+		
 	}
 	
 	else{
-		printf("No valid algorithm selected");
+		printf("No valid algorithm selected\n");
 		exit(1);
+	}
+	
+	for (int i = 0; i < nframes; i++){
+		if(ft[i] == selected_page){
+			disk_write(disk, selected_page, &data[i*PAGE_SIZE]);
+			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
+		}
 	}
 }
 
