@@ -14,11 +14,14 @@ how to use the page table and disk interfaces.
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 
 struct disk *disk;
 const char *sel; //Selector of function to execute
 int *ft; //frame table
 int page_faults = 0;
+int disk_writes = 0;
+int disk_reads = 0;
 int *faulted_pages;
 
 void page_fault_handler( struct page_table *pt, int page )
@@ -30,6 +33,7 @@ void page_fault_handler( struct page_table *pt, int page )
 
 	for (int i = 0; i < nframes; i++){
 		if(ft[i] == -1) {
+			disk_reads++;
 			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
 			disk_read(disk, page, &data[i*PAGE_SIZE]);
 			ft[i] = page;
@@ -78,10 +82,17 @@ void page_fault_handler( struct page_table *pt, int page )
 	
 	for (int i = 0; i < nframes; i++){
 		if(ft[i] == selected_page){
+			disk_writes++;
+			disk_reads++;
 			disk_write(disk, selected_page, &data[i*PAGE_SIZE]);
+			disk_read(disk, page, &data[i*PAGE_SIZE]);
+			page_table_set_entry(pt, selected_page, 0, NULL);
 			page_table_set_entry(pt, page, i, PROT_READ|PROT_WRITE);
+
 		}
 	}
+	page_table_print(pt);
+	printf("\n");
 }
 
 int main( int argc, char *argv[] )
@@ -97,6 +108,7 @@ int main( int argc, char *argv[] )
 	int nframes = atoi(argv[2]);
 	sel = argv[3];
 	const char *program = argv[4];
+	srand48(time(NULL));
 
 	ft = malloc(nframes*sizeof(int)); //we create the frame table
 	for (int i = 0; i < nframes; i++){
@@ -147,6 +159,10 @@ int main( int argc, char *argv[] )
 
 	page_table_delete(pt);
 	disk_close(disk);
+	
+	printf("Page Faults= %d\n", page_faults);
+	printf("Writes to disk = %d\n", disk_writes);
+	printf("Reads to disk = %d\n", disk_reads);
 
 	return 0;
 }
