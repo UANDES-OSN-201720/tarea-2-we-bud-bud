@@ -28,7 +28,6 @@ void page_fault_handler( struct page_table *pt, int page )
 {
 	int nframes = page_table_get_nframes(pt);
 	//printf("Frames: %d\n", nframes);
-	int npages = page_table_get_npages(pt);
 	page_faults++;
 	char *data = page_table_get_physmem(pt);
 
@@ -63,15 +62,10 @@ void page_fault_handler( struct page_table *pt, int page )
 		
 		faulted_pages[page] ++;
 		int lower_faults_page_index = -1;
-		int page_in_memory = 0;
 		
-		for (int i = 0; i < npages; i++){
-			for (int j = 0; j < nframes; j++){
-				if(ft[j] == i) page_in_memory = 1;
-				else page_in_memory = 0;
-			}
-			if((faulted_pages[i] <= faulted_pages[lower_faults_page_index] && page_in_memory) || (lower_faults_page_index == -1 && page_in_memory)){
-				lower_faults_page_index = i;
+		for (int j = 0; j < nframes; j++){
+			if(faulted_pages[ft[j]] < faulted_pages[lower_faults_page_index] || lower_faults_page_index == -1 ){
+				lower_faults_page_index = ft[j];
 			}
 		}
 		selected_page = lower_faults_page_index;
